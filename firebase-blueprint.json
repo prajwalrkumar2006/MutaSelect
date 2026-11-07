@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated hardware verification engineer",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "RTL design workspace with synthesizable files and testbenches",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 128 },
+        "description": { "type": "string", "maxLength": 512 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "isSample": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "ownerId", "createdAt"]
+    },
+    "Experiment": {
+      "title": "Experiment",
+      "description": "Mutation testing execution run and ML regression suite selection result",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["projectId", "name", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile directory"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Hardware projects and RTL models"
+    },
+    "/experiments/{experimentId}": {
+      "schema": "Experiment",
+      "description": "Regression experiments, kill matrices, and safety audit reports"
+    }
+  }
+}

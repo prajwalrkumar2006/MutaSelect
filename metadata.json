@@ -1,0 +1,6 @@
+{
+  "name": "MutaSelect AI",
+  "description": "Production-grade RTL mutation testing and ML-assisted regression suite optimizer with safety fallback for generic Verilog/SystemVerilog designs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

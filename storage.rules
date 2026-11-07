@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Projects artifacts: RTL sources, testbenches, logs, reports
+    match /projects/{projectId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+                   && request.resource.size < 50 * 1024 * 1024; // 50MB max file limit
+    }
+
+    // Experiments logs and Parquet kill matrices
+    match /experiments/{experimentId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+                   && request.resource.size < 100 * 1024 * 1024; // 100MB limit
+    }
+  }
+}

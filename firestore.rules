@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // PII protection
+      allow create: if isOwner(userId)
+                    && isValidId(userId)
+                    && incoming().email is string
+                    && incoming().email.size() <= 128;
+      allow update: if isOwner(userId)
+                    && incoming().email == existing().email;
+      allow delete: if false;
+    }
+
+    // Projects Collection
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.isSample == true);
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.isSample == true);
+      allow create: if isSignedIn()
+                    && isValidId(projectId)
+                    && incoming().ownerId == request.auth.uid
+                    && incoming().name is string
+                    && incoming().name.size() <= 128;
+      allow update: if isSignedIn()
+                    && existing().ownerId == request.auth.uid
+                    && incoming().ownerId == existing().ownerId;
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+
+    // Experiments Collection
+    match /experiments/{experimentId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn()
+                    && isValidId(experimentId)
+                    && incoming().projectId is string
+                    && incoming().projectId.size() <= 128;
+      allow update: if isSignedIn()
+                    && incoming().projectId == existing().projectId;
+      allow delete: if isSignedIn();
+    }
+
+    // Mutants Collection
+    match /experiments/{experimentId}/mutants/{mutantId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidId(mutantId);
+      allow delete: if isSignedIn();
+    }
+
+    // Kill Matrices
+    match /experiments/{experimentId}/killMatrices/{matrixId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(matrixId);
+    }
+
+    // Selection Results
+    match /experiments/{experimentId}/selections/{selectionId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(selectionId);
+    }
+
+    // Safety Reports
+    match /experiments/{experimentId}/safetyReports/{reportId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(reportId);
+    }
+  }
+}
